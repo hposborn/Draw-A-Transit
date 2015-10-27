@@ -26,8 +26,7 @@ THIS IS THE PYTHON ADAPTION OF JOE LLAMA'S IDL TRANSIT CODE
 '''
 
 import numpy as np
-import matplotlib as plt
-import me.planetlib as pl
+import matplotlib.pyplot as plt
 import pygame
 from os import sys
 '''
@@ -53,6 +52,7 @@ def DrawShape(oldshape=[]):
     pr=True
     part=1;hold=0
     star=np.zeros((2, 2))
+    print "Click and drag to draw star"
     while pr==True:        
         for event in pygame.event.get():
             if part==2:
@@ -67,6 +67,7 @@ def DrawShape(oldshape=[]):
                         pygame.draw.polygon(screen,(0,0,255), np.array(PGPoints))
                         pygame.display.update()
                 if event.type == pygame.MOUSEBUTTONUP:
+                    print "Hit Enter to start transit fitting"
                     #End of hold. 
                     hold=0
                     PGPoints+=[pygame.mouse.get_pos()]
@@ -88,6 +89,7 @@ def DrawShape(oldshape=[]):
                     star[0]=np.array(pygame.mouse.get_pos())
                     hold=1
                 if event.type == pygame.MOUSEBUTTONUP:
+                    print "Star drawn. Now click and drag to make the occulter"
                     star[1]=np.array(pygame.mouse.get_pos())
                     #calculating centre and radius from two edge points
                     star=[np.average(star, axis=0), (((star[1]-star[0])**2).sum()**0.5)/2]
@@ -115,11 +117,10 @@ def Transit(lc, PGpoints, intrans, starpos):
     step=4.0
     lc=lc[lc[:, 0].argsort(), :]
     timearr=np.linspace(lc[0,0],lc[-1,0],1600)
-    print timearr
-    print lc[:, 0]
     lightcurvemodel=[]
     #Drawing initial plots
-    fig=plt.figure(figsize=(6,  12))
+    plt.figure(figsize=(6,  12))
+    fig=plt.gcf()
     ax1=fig.add_subplot(211)
     ax1.imshow(star[:, :800],cmap='hot');
     ax2=fig.add_subplot(212)
@@ -139,11 +140,12 @@ def Transit(lc, PGpoints, intrans, starpos):
         lightcurvemodel+=[np.sum(total)+np.sum(rest)]
         ax2.plot(timearr[pix-400],np.array(lightcurvemodel)[-1],'.r')
         plt.pause(0.002)
-        movie=1 #Setting to record pngs as movie
+        movie=0 #Setting to record pngs as movie
         if movie==1:
-            plt.savefig('TransitMovie/Movie'+str(pix)+'.png')
+            fig.savefig('Movie'+str(pix)+'.png')
     plt.pause(1)
     np.savetxt('OutLightcurve.txt',np.column_stack((timearr[0:len(lightcurvemodel)],np.array(lightcurvemodel))))
+    np.savetxt('OutPolynomial.txt',np.hstack((starpos, PGpoints)))
 
 def DrawStar(stars):
     star=dist_circle([800,2400], stars[0][0],  stars[0][1]+800)#Drawing array where
